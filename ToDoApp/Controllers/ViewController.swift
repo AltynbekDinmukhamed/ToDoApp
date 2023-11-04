@@ -81,16 +81,17 @@ class ViewController: UIViewController {
         return table
     }()
     
-    let addTaskBtn: UIButton = {
+    lazy var addTaskBtn: UIButton = {
         let btn = UIButton()
         btn.setImage(UIImage(systemName: "plus.circle"), for: .normal)
         btn.backgroundColor = .black
         btn.tintColor = .white
         btn.clipsToBounds = true
         btn.layer.cornerRadius = 60 / 2
+        btn.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
         return btn
     }()
-    
+    var modelData: [TaskData] = [TaskData]()
     //MARK: -LifeCycle-
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -162,6 +163,15 @@ extension ViewController {
         }
     }
 }
+
+//MARK: -Objc functions extension
+extension ViewController {
+    @objc func addTapped(_ sender: UIButton) {
+        let vc = AddNewTaskViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+}
+
 //MARK: -Extension UITableViewDataSource
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

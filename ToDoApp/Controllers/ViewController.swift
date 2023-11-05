@@ -101,7 +101,35 @@ class ViewController: UIViewController {
         setUpConstraints()
     }
     //MARK: -Functions-
+    private func taskForDate(_ date: Date) -> [TaskData] {
+        return modelData.filter { Calendar.current.isDate($0.date, inSameDayAs: date)}
+    }
     
+    private func dateForSection(_ section: Int) -> Date {
+        switch section {
+        case 0: return Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        case 1: return Date()
+        case 2: return Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        default: return Date()
+        }
+    }
+    
+    private func updateTaskCount() {
+        let totalTasks = modelData.count
+        //let completedTask = modelData.filter { _ in }.count
+        taskLbl.text = "\(totalTasks) task, 0 completed"
+    }
+    
+    private func loadsTasks() {
+        if let data = UserDefaults.standard.data(forKey: "tasks") {
+            do {
+                modelData = try JSONDecoder().decode([TaskData].self, from: data)
+                table.reloadData()
+            } catch {
+                print("nable to decode tasks (\(error))")
+            }
+        }
+    }
 }
 
 //MARK: -Exntension-
@@ -175,7 +203,9 @@ extension ViewController {
 //MARK: -Extension UITableViewDataSource
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 20
+        let date = dateForSection(section)
+        let task = taskForDate(date)
+        return task.count
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -184,13 +214,22 @@ extension ViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! ToDoTableViewCell
+        let date = dateForSection(indexPath.section)
+        let tasks = taskForDate(date)
+        let task = tasks[indexPath.row]
+        cell.configureWith(item: task)
         return cell
     }
 }
 //MARK: -Extension UITableViewDelegate-
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return "Sections"
+        switch section {
+        case 0: return "Yesterday"
+        case 1: return "Today"
+        case 2: return "Tomorrow"
+        default: return nil
+        }
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

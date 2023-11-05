@@ -68,12 +68,45 @@ class AddNewTaskViewController: UIViewController {
         setUpConstraints()
     }
     //MARK: -Functions-
+    private func saveTask(task: TaskData) {
+        var tasks = getTask()
+        
+        tasks.append(task)
+        do {
+            let data = try JSONEncoder().encode(tasks)
+            UserDefaults.standard.set(data, forKey: "tasks")
+        }catch{
+            print("Unable to encode tasks (\(error))")
+        }
+    }
+    
+    private func getTask() -> [TaskData] {
+        if let data = UserDefaults.standard.data(forKey: "tasks") {
+            do {
+                let task = try JSONDecoder().decode([TaskData].self, from: data)
+                return task
+            } catch {
+                print("Unable to decode tasks (\(error))")
+            }
+        }
+        return []
+    }
 }
 
 //MARK: -Exntension with objc func-
 extension AddNewTaskViewController {
     @objc func didAddTapped(_ sender: UIButton) {
+        guard let titl = taskLblTextField.text, !titl.isEmpty, let subtitle = subTitleTextField.text, !subtitle.isEmpty else {
+            print("Task title or subtitle is empty")
+            return
+        }
         
+        let newTask = TaskData(title: titl, subtitle: subtitle, date: picker.date, image: nil)
+        saveTask(task: newTask)
+        
+        let vc = ViewController()
+        vc.modelData = [newTask]
+        navigationController?.pushViewController(vc, animated: true)
     }
     
     @objc func choseImgTapped(_ sender: UIButton) {

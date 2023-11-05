@@ -14,7 +14,7 @@ class ToDoTableViewCell: UITableViewCell {
     let leftImage: UIImageView = {
         let img = UIImageView()
         img.image = UIImage(systemName: "list.dash.header.rectangle")
-        img.tintColor = .systemGray
+        img.tintColor = .black
         img.clipsToBounds = true
         img.layer.cornerRadius = img.frame.height / 2
         return img
@@ -56,6 +56,23 @@ class ToDoTableViewCell: UITableViewCell {
     
     
     //MARK: -functions-
+    func configureWith(item: TaskData) {
+        nameLbl.text = item.title
+        subAmountbl.text = item.subtitle
+        leftImage.image = item.image ?? UIImage(named: "list.dash.header.rectangle")
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .none
+        
+        
+        let currentDate = Date()
+        if item.date < currentDate {
+            backgroundColor = UIColor.systemRed.withAlphaComponent(0.3)
+        } else {
+            backgroundColor = UIColor.white
+        }
+    }
 }
 extension ToDoTableViewCell {
     private func setUpViews() {

@@ -96,17 +96,21 @@ class AddNewTaskViewController: UIViewController {
 //MARK: -Exntension with objc func-
 extension AddNewTaskViewController {
     @objc func didAddTapped(_ sender: UIButton) {
-        guard let titl = taskLblTextField.text, !titl.isEmpty, let subtitle = subTitleTextField.text, !subtitle.isEmpty else {
+        guard let title = taskLblTextField.text, !title.isEmpty, let subtitle = subTitleTextField.text, !subtitle.isEmpty else {
             print("Task title or subtitle is empty")
             return
         }
-        
-        let newTask = TaskData(title: titl, subtitle: subtitle, date: picker.date, image: nil)
+            
+        let newTask = TaskData(title: title, subtitle: subtitle, date: picker.date, image: nil)
         saveTask(task: newTask)
+
+        // Теперь вместо перехода на другой экран, просто обновите текущий интерфейс
+        // Например, отправьте уведомление или используйте делегат для обновления таблицы в другом ViewController
+        NotificationCenter.default.post(name: NSNotification.Name("NewTaskAdded"), object: nil)
         
-        let vc = ViewController()
-        vc.modelData = [newTask]
-        navigationController?.pushViewController(vc, animated: true)
+        let alert = UIAlertController(title: "Success", message: "Task successfully added", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
     @objc func choseImgTapped(_ sender: UIButton) {
@@ -161,3 +165,4 @@ extension AddNewTaskViewController {
         }
     }
 }
+

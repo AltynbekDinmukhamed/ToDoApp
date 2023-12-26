@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class ViewController: UIViewController {
+class ListViewController: UIViewController {
     //MARK: -Variables-
     let calendatImg: UIImageView = {
         let img = UIImageView()
@@ -81,16 +81,6 @@ class ViewController: UIViewController {
         return table
     }()
     
-    lazy var addTaskBtn: UIButton = {
-        let btn = UIButton()
-        btn.setImage(UIImage(systemName: "plus.circle"), for: .normal)
-        btn.backgroundColor = .black
-        btn.tintColor = .white
-        btn.clipsToBounds = true
-        btn.layer.cornerRadius = 60 / 2
-        btn.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
-        return btn
-    }()
     var modelData: [TaskData] = [TaskData]()
     //MARK: -LifeCycle-
     override func viewDidLoad() {
@@ -99,6 +89,11 @@ class ViewController: UIViewController {
         table.dataSource = self
         setUpView()
         setUpConstraints()
+        NotificationCenter.default.addObserver(self, selector: #selector(newTaskAdded), name: NSNotification.Name("NewTaskAdded"), object: nil)
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadsTasks()
     }
     //MARK: -Functions-
     private func taskForDate(_ date: Date) -> [TaskData] {
@@ -126,14 +121,24 @@ class ViewController: UIViewController {
                 modelData = try JSONDecoder().decode([TaskData].self, from: data)
                 table.reloadData()
             } catch {
-                print("nable to decode tasks (\(error))")
+                print("Unable to decode tasks (\(error))")
             }
         }
     }
+    
+    private func saveTasks() {
+        do {
+            let data = try JSONEncoder().encode(modelData)
+            UserDefaults.standard.set(data, forKey: "tasks")
+        } catch {
+            print("Unable to encode tasks (\(error))")
+        }
+    }
+    
 }
 
 //MARK: -Exntension-
-extension ViewController {
+extension ListViewController {
     private func setUpView() {
         view.backgroundColor = .white
         navigationController?.isNavigationBarHidden = true
@@ -146,7 +151,6 @@ extension ViewController {
         topStack.addArrangedSubview(todayBtn)
         topStack.addArrangedSubview(tomorrowBtn)
         view.addSubview(table)
-        view.addSubview(addTaskBtn)
     }
     
     private func setUpConstraints() {
@@ -183,25 +187,18 @@ extension ViewController {
             make.bottom.equalToSuperview()
         }
         
-        addTaskBtn.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().offset(-20)
-            make.trailing.equalToSuperview().offset(-20)
-            make.height.equalTo(60)
-            make.width.equalTo(60)
-        }
     }
 }
 
 //MARK: -Objc functions extension
-extension ViewController {
-    @objc func addTapped(_ sender: UIButton) {
-        let vc = AddNewTaskViewController()
-        navigationController?.pushViewController(vc, animated: true)
-    }
+extension ListViewController {
+    @objc private func newTaskAdded() {
+            loadsTasks()
+        }
 }
 
 //MARK: -Extension UITableViewDataSource
-extension ViewController: UITableViewDataSource {
+extension ListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let date = dateForSection(section)
         let task = taskForDate(date)
@@ -222,7 +219,7 @@ extension ViewController: UITableViewDataSource {
     }
 }
 //MARK: -Extension UITableViewDelegate-
-extension ViewController: UITableViewDelegate {
+extension ListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 0: return "Yesterday"
@@ -235,4 +232,28 @@ extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 50
     }
+    
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let date = dateForSection(indexPath.section)
+            // Отфильтровать задачи для этой даты
+            let taskForDates = taskForDate(date)
+            // Убедиться, что индекс не выходит за пределы
+            if indexPath.row < taskForDates.count {
+                // Удалить задачу из общего массива
+                if let index = modelData.firstIndex(where: { task in
+                    task.id == taskForDates[indexPath.row].id
+                }) {
+                    modelData.remove(at: index)
+                    saveTasks()
+                }
+                tableView.deleteRows(at: [indexPath], with: .fade)
+            }
+        }
+    }
 }
+

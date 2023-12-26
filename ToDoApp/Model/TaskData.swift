@@ -8,6 +8,7 @@ import Foundation
 import UIKit
 
 struct TaskData: Codable {
+    var id: UUID
     var title: String
     var subtitle: String
     var date: Date
@@ -15,6 +16,7 @@ struct TaskData: Codable {
     
     // Эта функция позволяет инициализировать TaskData с UIImage
     init(title: String, subtitle: String, date: Date, image: UIImage?) {
+        self.id = UUID()
         self.title = title
         self.subtitle = subtitle
         self.date = date
